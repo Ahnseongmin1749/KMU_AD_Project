@@ -23,3 +23,48 @@
 터미널 환경에서 프로젝트에 필요한 외부 모듈을 일괄 설치합니다.
 ```bash
 python -m pip install playwright transformers torch langchain langchain-openai python-dotenv
+
+### 2. 크롤러 브라우저 바이너리 다운로드
+playwright 모듈의 웹 브라우저 인스턴스 제어를 위해 아래 명령어를 추가로 실행합니다.
+```bash
+playwright install
+
+3. 시스템 실행
+```bash
+python main.py
+
+## 🧩 모듈별 상세 아키텍처 및 흐름 (Architecture Flow)
+
+본 시스템은 데이터 수집부터 최종 액션까지 총 4개의 독립된 기능적 파이프라인(모듈)으로 구성되어 유기적으로 동작합니다.
+
+### 1. Module 1: Data Ingestion (crawler.py)
+* **목적**: 분석 대상이 되는 SNS 플랫폼의 실시간 텍스트 트래픽 확보
+* **주요 기능**:
+  * 타겟 URL(유튜브 동영상, 인스타그램 포스트 등) 인터페이스 접속 자동화
+  * 동적 스크롤 제어를 통한 비동기 댓글 레이어 로딩 및 렌더링 대응
+  * 플랫폼별 봇 탐지 정책을 우회하기 위한 휴먼 라이크(Human-like) 무작위 딜레이 메커니즘 적용
+* **데이터 흐름**: `Target URL` ➔ `Playwright Engine` ➔ `Raw Text Data 추출`
+
+### 2. Module 2: Context Evaluation Encoder (detector.py)
+* **목적**: 수집된 원본 데이터 내의 혐오 표현 및 갈등 유발 요소 정밀 판독
+* **주요 기능**:
+  * 자연어 처리(NLP) 임베딩 모델을 활용한 문장의 언어 맥락 분석
+  * 딥러닝 기반 텍스트 분류 알고리즘(`KcELECTRA`)을 통한 지능형 혐오 수치(Hate Score) 연산
+  * 설정된 임계치($\tau$)를 기반으로 단순 일상 댓글과 선동형 혐오 댓글을 분리하는 Decision Gate 역할 수행
+* **데이터 흐름**: `Raw Text Data` ➔ `NLP Embedding` ➔ `Hate Score 판정 (Target 선별)`
+
+### 3. Module 3: Counter-Speech Generator (generator.py)
+* **목적**: 감정적 동조를 배제하고 확증 편향을 완화할 수 있는 이성적 대응문 생성
+* **주요 기능**:
+  * 신뢰성 있는 외부 지식 베이스(Fact-check DB)와 연동하는 **RAG(검색 증강 생성)** 아키텍처 구현
+  * OpenAI API를 결합하여 팩트 기반의 객관적인 검증 정보 추출
+  * 시스템 프롬프트 제어를 통해 조롱이나 비하가 배제된 정중하고 논리적인 '중립 반박문(Counter-Speech)' 빌드
+* **데이터 흐름**: `Target 혐오 댓글` + `Fact-Context` ➔ `LLM 파이프라인` ➔ `중립 반박문 생성`
+
+### 4. Module 4: Automated Macro Agent (poster.py)
+* **목적**: 생성된 건강한 여론 데이터를 플랫폼에 안전하게 환원 및 도배 방지
+* **주요 기능**:
+  * 탐지된 혐오 댓글의 하위 레이어(대댓글/답글) 구조를 타겟팅하여 정확한 위치에 포스팅 매크로 구동
+  * 무분별한 스팸 처리를 방지하기 위해 1대1 페어링(악플 1개당 단 하나의 팩트체크 대댓글) 규칙 엄격 제한
+  * IP 로테이션 및 프록시 레이어를 통해 플랫폼사의 Rate Limiting(요청 제한) 및 제재 정책 우회 방어
+* **데이터 흐름**: `중립 반박문` ➔ `API Proxy Layer` ➔ `SNS 플랫폼 내 자동 포스팅`
