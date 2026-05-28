@@ -68,10 +68,39 @@ python -m pip install playwright transformers torch langchain langchain-openai p
 ### 2. 크롤러 브라우저 바이너리 다운로드
 playwright 모듈의 웹 브라우저 인스턴스 제어를 위해 아래 명령어를 추가로 실행합니다.
 ```bash
-playwright install
+playwright install chromium
 ```
 
 ### 3. 시스템 실행
 ```bash
 python main.py
 ```
+
+실행 후 콘솔에서 아래 값을 입력하면 해당 URL의 댓글을 실제로 수집합니다.
+- 유튜브 영상 URL
+- 수집할 최대 댓글 수(엔터 시 기본 30개)
+- 반복 선동 임계치(동일 계열 댓글 수, 엔터 시 기본 3개)
+
+### 4. 디버깅 모드(선택)
+댓글 수집이 불안정할 때는 브라우저를 화면에 띄워 동작을 확인할 수 있습니다.
+
+PowerShell:
+```powershell
+$env:CRAWLER_HEADLESS="false"
+python main.py
+```
+
+### 5. 포스팅 모드 안내
+- 현재 `poster.py`는 기본적으로 **DRY-RUN(시뮬레이션)** 모드입니다.
+- 즉, 로그에는 "작성 대상"이 출력되지만 실제 YouTube 댓글은 등록되지 않습니다.
+- `POST_LIVE=true`를 켜도 현재 버전에서는 실제 작성 자동화는 미구현 상태입니다.
+
+### 6. 혐오 탐지 모델 변경(선택)
+- 기본 모델: `unitary/multilingual-toxic-xlm-roberta`
+- 환경변수 `HATE_MODEL_NAME`으로 다른 text-classification 모델을 지정할 수 있습니다.
+
+### 7. API 키 보안 운영(권장)
+- 퍼블릭 저장소 업로드 시 `.env` 파일은 절대 커밋하지 마세요.
+- 기본 `.gitignore`에 `.env`가 포함되어 있습니다.
+- 이 프로젝트는 `OPENAI_API_KEY`가 없으면 실행 중 런타임 입력(숨김)으로 키를 설정할 수 있습니다.
+- 런타임 입력 키는 프로세스 메모리에만 유지되고 파일로 저장되지 않습니다.
