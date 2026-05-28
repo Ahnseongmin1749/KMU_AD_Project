@@ -216,3 +216,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Visual Studio 개발 툴 임시 파일 및 캐시 제외
+.vs/
+*.suo
+*.user
+*.sln
+
+# 프로젝트 보안 관련 (비밀 키 보관용 메모장 등 추가 차단)
+secret_key.txt
+
+# Module 3에서 구축할 RAG용 로컬 벡터 데이터베이스 폴더 제외
+/fact_db/
